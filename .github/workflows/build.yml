@@ -1,0 +1,45 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Permet de déclencher manuellement le workflow
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-linux:
+    name: Build on Linux
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+        sudo apt-get install -y vulkan-tools vulkan-validationlayers libvulkan-dev
+        sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+    - name: Create build directory
+      run: mkdir -p build
+
+    - name: Configure CMake
+      run: |
+        cd build
+        cmake ../Code
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+
+    - name: Run tests
+      run: |
+        cd build
+        ctest -C Release --output-on-failure
